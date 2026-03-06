@@ -1,0 +1,10 @@
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/minidb.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/buffer_pool_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/b_plus_tree_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/executor_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/lock_manager_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/sql_parser_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/integration_test.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/RUN_TESTS.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/ALL_BUILD.dir
+D:/Users/andyzhang/Desktop/AtlasDB-main/build/CMakeFiles/ZERO_CHECK.dir

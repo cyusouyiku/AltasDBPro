@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\Users\andyzhang\Desktop\AtlasDB-main\build\CMakeFiles\2ca5b8d2d8ccd764dc4231527bf69355\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{85B9B343-B15C-32C7-8DC8-3129806CD9CC}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

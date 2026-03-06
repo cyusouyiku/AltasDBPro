@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Solution>
+	<Configurations>
+		<BuildType Name="Debug"/>
+		<BuildType Name="Release"/>
+		<BuildType Name="MinSizeRel"/>
+		<BuildType Name="RelWithDebInfo"/>
+		<Platform Name="x64"/>
+	</Configurations>
+	<Project Path="ALL_BUILD.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fdbbf5f3-ea9a-359b-b919-6ac5aae0e02b" DefaultStartup="true">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="b_plus_tree_test.vcxproj"/>
+		<BuildDependency Project="buffer_pool_test.vcxproj"/>
+		<BuildDependency Project="executor_test.vcxproj"/>
+		<BuildDependency Project="integration_test.vcxproj"/>
+		<BuildDependency Project="lock_manager_test.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+		<BuildDependency Project="sql_parser_test.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="RUN_TESTS.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="3ebd79ed-06d3-3182-897e-eec9e5dc87dc">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<Build Solution="Debug|*" Project="false"/>
+		<Build Solution="Release|*" Project="false"/>
+		<Build Solution="MinSizeRel|*" Project="false"/>
+		<Build Solution="RelWithDebInfo|*" Project="false"/>
+	</Project>
+	<Project Path="ZERO_CHECK.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="8d3591dc-8e05-3377-8655-d62e1dfefbe4"/>
+	<Project Path="b_plus_tree_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="fef65c56-95fb-39ca-b4fd-feeb0c1b3da5">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+	<Project Path="buffer_pool_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="aac4ca6e-399c-39d0-96dc-62d88b21161b">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+	<Project Path="executor_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="1268c312-d471-34db-8c2a-e5b56e37a1aa">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+	<Project Path="integration_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="12876fb5-3563-317a-b2f1-8162ab00f389">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+	<Project Path="lock_manager_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="5e54a8dc-c59c-3217-834c-9342665ba7cd">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+	<Project Path="minidb.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="33713a4e-6f9e-304b-b120-6cef09a8a8bf">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+	</Project>
+	<Project Path="sql_parser_test.vcxproj" Type="8bc9ceb8-8b4a-11d0-8d11-00a0c91bc942" Id="b2386fcf-ea7b-303d-945a-272c749eba90">
+		<BuildDependency Project="ZERO_CHECK.vcxproj"/>
+		<BuildDependency Project="minidb.vcxproj"/>
+	</Project>
+</Solution>

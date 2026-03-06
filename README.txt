@@ -1,0 +1,678 @@
+========================================
+数据库内核开发项目 README
+Project: AtlasDB / MiniDB（冷热分层关系型数据库内核）
+Language Standard: Modern C++17
+目标场景: 电商、12306 等高流量数据库
+========================================
+
+一、项目简介
+----------------------------------------
+AtlasDB 是基于 MiniDB 改造的工业级冷热分层关系型数据库内核，
+面向电商、12306 等高流量场景，通过五维优化提升缓存命中率、
+降低响应时间、平衡读写性能。
+
+项目采用分层架构，在原有教学级内核基础上新增冷热分层能力：
+- 🔧 **存储层**：分层优先级缓冲池（LayeredClock）、磁盘 I/O
+- 🔍 **索引层**：B+树索引、分层索引管理（规划中）
+- ⚙️ **执行层**：火山模型、分层路由、MergeExecutor 并行扫描
+- 📊 **分层管理**：LayerManager 冷热迁移、限流、动态配置
+- 📝 **日志层**：WAL、迁移全链路日志
+- 📈 **运维层**：MetricsManager（Prometheus 兼容）、可观测
+
+【项目状态】：✅ 冷热分层五维优化已实现
+- 缓存：LayeredClock 分层替换、页温度标记 ✓
+- 查询：QueryOptimizer 时间预判、SeqScan 分层路由、MergeExecutor ✓
+- 写入：InsertExecutor 批量攒批（1000 行/批）✓
+- 运维：MetricsManager、LayerManager 迁移日志、动态阈值 ✓
+- 索引：分层隔离与轻量化（规划中）
+
+### 冷热分层五维优化（config.h 可配置）
+| 维度 | 配置常量 | 说明 |
+|------|----------|------|
+| 缓存 | HOT_TOP_N_PAGES=100 | 热点预加载 Top N 页 |
+| 缓存 | HOT_ACCESS_WINDOW_HOURS=1 | 热点识别时间窗口（小时）|
+| 查询 | HOT_THRESHOLD_DAYS=3 | 热数据时间阈值（天）|
+| 写入 | BATCH_INSERT_SIZE=1000 | 热数据批量写入（行/批）|
+| 迁移 | MIGRATION_RATE_LIMIT=1000 | 迁移限流（行/秒）|
+
+
+二、项目功能概述
+----------------------------------------
+
+### ✅ 冷热分层五维优化（已实现）
+
+#### 1. 缓存维度：分层优先级缓存
+- LayeredClock 替换策略（冷页淘汰优先级为热页 5 倍）
+- Page 页温度标记（HOT/COLD/NORMAL）
+- BufferPoolManager 集成 LayeredClock，Unpin 时传递页温度
+
+#### 2. 查询维度：分层路由与并行化
+- QueryOptimizer：ParseTimeConditionDays、InferTargetLayer（时间条件预判）
+- SeqScanExecutor：支持 LayerManager + DataLayer，分层过滤
+- MergeExecutor：热层+冷层扫描结果合并
+
+#### 3. 写入维度：批量攒批
+- InsertExecutor：每 BATCH_INSERT_SIZE（1000 行）批量刷盘
+- TableHeap：FlushBatch() 批量刷脏页
+
+#### 4. 运维维度：可观测与动态配置
+- MetricsManager：热/冷层页数、缓存命中率、迁移统计、Prometheus 格式
+- LayerManager：冷热迁移、限流（1000 行/秒）、迁移日志、动态 HOT_THRESHOLD
+
+#### 5. 配置常量（config.h）
+- HOT_THRESHOLD_DAYS、BATCH_INSERT_SIZE、MIGRATION_RATE_LIMIT、HOT_TOP_N_PAGES
+
+### ✅ 基础功能（框架 + 实现）
+
+#### 存储管理子系统
+- 基于页面的存储管理（Page-based Storage）
+- LayeredClock 分层替换策略的缓冲池（Buffer Pool Manager）
+- 磁盘 I/O 管理器（DiskManager）
+- 表堆存储结构（Table Heap，含 FlushBatch）
+
+#### 索引子系统
+- B+树索引结构（支持范围查询）
+- 索引迭代器实现
+- 并发安全的索引操作
+
+#### 查询执行子系统
+- 基础执行器：SeqScan、IndexScan、Insert
+- 高级执行器框架：Join、Aggregation、Sort（接口定义完成）
+- 火山模型（Volcano Model）执行引擎
+- 执行器树组合机制
+
+#### 并发控制子系统
+- 锁管理器框架（LockManager）
+- 事务管理器（TransactionManager）
+- 两阶段锁协议（2PL）基础实现
+- 死锁检测算法框架
+
+### 🚧 开发中/规划中功能
+
+#### 系统增强功能
+- 查询计划缓存（QueryPlanCache）
+- 日志与恢复系统（WAL + Checkpoint）
+- 网络服务层（ServerManager）
+- SQL 解析器（SQLParser）
+
+#### 高级功能
+- 查询优化器（基于规则的优化）
+- 目录管理器（多表支持）
+- 性能基准测试框架
+- 系统监控与诊断接口
+
+
+三、项目目录结构
+----------------------------------------
+
+MiniDB/
+│
+├── README.txt                // 项目说明文档
+├── 开发计划.md               // 接下来一个月详细开发计划
+│
+├── include/                   // 头文件目录（33个文件）
+│   ├── buffer/                     // 缓冲池管理
+│   │   ├── BufferPoolManager.h      // 缓冲池管理器（LayeredClock 分层替换）
+│   │   ├── Clock.h / ClockPro.h     // Clock / ClockPro 替换策略
+│   │   ├── LayeredClock.h           // 分层优先级替换（冷页 5 倍优先淘汰）
+│   │   ├── Page.h                   // 页面抽象（含温度标记）
+│   │   ├── QueryPlan.h              // 查询计划基类
+│   │   └── QueryPlanCache.h         // 查询计划缓存（框架完成）
+│   │
+│   ├── storage/                    // 存储管理
+│   │   ├── DiskManager.h            // 磁盘管理器（已实现基础功能）
+│   │   ├── table_heap.h             // 表堆存储（含 FlushBatch）
+│   │   ├── LayerManager.h           // 冷热分层管理器（迁移、限流、日志）
+│   │   └── CatalogManager.h         // 目录管理器（框架完成）
+│   │
+│   ├── index/                      // 索引系统
+│   │   ├── BPlusTree.h              // B+ 树索引（已实现基础功能）
+│   │   └── index_iterator.h         // 索引迭代器（已实现）
+│   │
+│   ├── executor/                   // 查询执行器（7个文件）
+│   │   ├── executor.h                // 执行器基类（已实现）
+│   │   ├── SeqScanExecutor.h        // 顺序扫描（支持分层路由）
+│   │   ├── IndexScanExecutor.h      // 索引扫描执行器（已实现基础功能）
+│   │   ├── InsertExecutor.h         // 插入执行器（批量攒批 1000 行/批）
+│   │   ├── MergeExecutor.h          // 热层+冷层结果合并
+│   │   ├── JoinExecutor.h           // 连接执行器（框架完成）
+│   │   ├── AggregationExecutor.h    // 聚合执行器（框架完成）
+│   │   └── SortExecutor.h           // 排序执行器（框架完成）
+│   │
+│   ├── concurrency/                // 并发控制（5个文件）
+│   │   ├── DeadLockDector.h         // 死锁检测器（已实现）
+│   │   ├── LockManager.h            // 锁管理器（框架完成）
+│   │   ├── ServerManager.h          // 服务管理器（网络层框架）
+│   │   ├── Transaction.h            // 事务抽象（已实现）
+│   │   └── TransactionManager.h     // 事务管理器（已实现）
+│   │
+│   ├── log/                        // 日志系统（5个文件）
+│   │   ├── LockTable.h              // 锁表（框架完成）
+│   │   ├── LogBuffer.h              // 日志缓冲区（框架完成）
+│   │   ├── LogRecord.h              // 日志记录（已定义）
+│   │   ├── WALManager.h             // WAL 管理器（框架完成）
+│   │   └── CheckpointManager.h      // 检查点管理器（框架完成）
+│   │
+│   ├── optimizer/                  // 查询优化
+│   │   └── QueryOptimizer.h         // 查询优化器（时间条件解析、分层预判）
+│   │
+│   ├── parser/                     // 解析器
+│   │   └── SQLParser.h              // SQL 解析器（框架完成）
+│   │
+│   └── benchmark/                  // 性能测试与监控
+│       ├── BenchmarkRunner.h        // 基准测试运行器（框架完成）
+│       └── MetricsManager.h         // 冷热分层监控（Prometheus 兼容）
+│   │
+│   └── common/
+│       ├── config.h                 // 配置常量
+│       ├── rid.h                    // 记录标识符
+│       └── types.h                  // 类型定义
+│
+├── src/                        // 源文件目录（28个文件）
+│   ├── buffer/                     // 缓冲池实现
+│   │   ├── BufferPoolManager.cpp    // 缓冲池管理器（LayeredClock）
+│   │   ├── Clock.cpp / ClockPro.cpp // Clock / ClockPro 算法
+│   │   ├── LayeredClock.cpp         // 分层优先级替换实现
+│   │   ├── Page.cpp                 // 页面管理实现
+│   │   └── QueryPlanCache.cpp       // 查询计划缓存实现
+│   │
+│   ├── storage/                    // 存储实现
+│   │   ├── DiskManager.cpp          // 磁盘管理器实现
+│   │   ├── table_heap.cpp           // 表堆存储实现（含 FlushBatch）
+│   │   ├── LayerManager.cpp         // 冷热分层管理器实现
+│   │   └── CatalogManager.cpp       // 目录管理器实现
+│   │
+│   ├── index/                      // 索引实现（1个文件）
+│   │   └── BPlusTree.cpp            // B+ 树索引实现
+│   │
+│   ├── executor/                   // 执行器实现（7个文件）
+│   │   ├── executor.cpp              // 执行器基类实现
+│   │   ├── SeqScanExecutor.cpp      // 顺序扫描（分层路由）
+│   │   ├── IndexScanExecutor.cpp    // 索引扫描执行器实现
+│   │   ├── InsertExecutor.cpp       // 插入执行器（批量攒批）
+│   │   ├── MergeExecutor.cpp        // 热层+冷层合并实现
+│   │   ├── JoinExecutor.cpp         // 连接执行器实现
+│   │   ├── AggregationExecutor.cpp  // 聚合执行器实现
+│   │   └── SortExecutor.cpp         // 排序执行器实现
+│   │
+│   ├── concurrency/                // 并发控制实现（5个文件）
+│   │   ├── DeadLockDector.cpp       // 死锁检测器实现
+│   │   ├── LockManager.cpp          // 锁管理器实现
+│   │   ├── ServerManager.cpp        // 服务管理器实现
+│   │   ├── Transaction.cpp          // 事务实现
+│   │   └── TransactionManager.cpp   // 事务管理器实现
+│   │
+│   ├── log/                        // 日志系统实现（4个文件）
+│   │   ├── LockTable.cpp            // 锁表实现
+│   │   ├── LogBuffer.cpp            // 日志缓冲区实现
+│   │   ├── WALManager.cpp           // WAL 管理器实现
+│   │   └── CheckpointManager.cpp    // 检查点管理器实现
+│   │
+│   ├── optimizer/                  // 优化器实现（1个文件）
+│   │   └── QueryOptimizer.cpp       // 查询优化器实现
+│   │
+│   ├── parser/                     // 解析器实现（1个文件）
+│   │   └── SQLParser.cpp            // SQL 解析器实现
+│   │
+│   ├── benchmark/                  // 基准测试与监控实现
+│   │   ├── BenchmarkRunner.cpp      // 基准测试运行器实现
+│   │   └── MetricsManager.cpp       // 冷热分层监控实现
+│   │
+│   └── common/                     // 公共组件实现（1个文件）
+│       └── config.cpp               // 配置常量实现
+│
+├── test/                        // 测试目录（5个测试文件）
+│   ├── buffer_pool_test.cpp         // 缓冲池测试（框架完成）
+│   ├── b_plus_tree_test.cpp         // B+ 树测试（框架完成）
+│   ├── executor_test.cpp            // 执行器测试（框架完成）
+│   ├── lock_manager_test.cpp        // 锁管理器测试（框架完成）
+│   └── sql_parser_test.cpp          // SQL 解析器测试（框架完成）
+│
+├── build/                            // 构建输出目录
+│
+└── CMakeLists.txt                    // 构建脚本
+
+
+四、核心模块职责说明
+----------------------------------------
+
+【1】Buffer Pool Manager（缓冲池管理器）
+
+职责：
+- 管理内存中的页面缓存（固定大小的页面池）
+- 处理页面从磁盘到内存的加载
+- 使用 Clock 替换器选择淘汰页面
+- 维护 page_id 到 frame_id 的映射关系
+- 保证页面访问的线程安全
+- 管理页面的固定（Pin）与取消固定（Unpin）
+
+核心成员变量：
+- std::vector<Page*> pages_
+  作用：存储所有页面对象的指针数组，数组下标即为 frame_id
+  大小：等于缓冲池容量（pool_size）
+  说明：每个元素指向一个 Page 对象，可能为空（nullptr）表示空闲帧
+
+- std::unordered_map<page_id_t, frame_id_t> page_table_
+  作用：维护 page_id 到 frame_id 的映射关系
+  说明：快速查找某个 page_id 对应的页面在 pages_ 数组中的位置
+  键：page_id（页面在磁盘上的唯一标识）
+  值：frame_id（页面在内存缓冲池中的帧索引）
+
+- Clock* replacer_
+  作用：页面替换策略管理器（Clock 算法）
+  说明：当缓冲池满时，通过 replacer_ 选择可被淘汰的页面
+  操作：调用 Victim() 获取可淘汰帧，调用 Pin/Unpin 管理页面状态
+
+- DiskManager* disk_manager_
+  作用：磁盘 I/O 管理器
+  说明：负责从磁盘读取页面数据，或将脏页写回磁盘
+  操作：ReadPage() 读取页面，WritePage() 写入页面，AllocPage() 分配新页
+
+- size_t pool_size_
+  作用：缓冲池容量（可容纳的页面数量）
+  说明：等于 pages_ 数组的大小，也是 replacer_ 的容量
+
+- std::mutex latch_
+  作用：缓冲池级别的互斥锁
+  说明：保护所有成员变量的并发访问，确保线程安全
+
+核心成员函数：
+
+- Page* FetchPage(page_id_t page_id)
+  功能：从缓冲池获取指定 page_id 的页面
+  逻辑：
+    1. 检查 page_table_ 中是否存在该 page_id
+    2. 如果存在（页面已在内存）：
+       - 返回对应的 Page*，增加 pin_count
+       - 调用 replacer_->Pin() 防止被替换
+    3. 如果不存在（页面不在内存）：
+       - 查找空闲帧（pages_[i] == nullptr）
+       - 如果没有空闲帧，调用 replacer_->Victim() 选择淘汰帧
+       - 如果淘汰帧的页面是脏页，先刷回磁盘
+       - 从磁盘读取页面数据到内存
+       - 更新 page_table_ 映射
+       - 初始化 Page 对象，设置 page_id
+       - 返回 Page*，增加 pin_count
+  返回值：成功返回 Page*，失败返回 nullptr
+
+- bool UnpinPage(page_id_t page_id, bool is_dirty)
+  功能：取消固定页面，允许被替换
+  逻辑：
+    1. 在 page_table_ 中查找 page_id 对应的 frame_id
+    2. 如果找不到，返回 false
+    3. 获取对应的 Page 对象，减少 pin_count
+    4. 如果 is_dirty 为 true，设置页面的脏标志
+    5. 如果 pin_count 降为 0，调用 replacer_->Unpin() 加入替换器
+  返回值：成功返回 true，失败返回 false
+
+- bool FlushPage(page_id_t page_id)
+  功能：将指定页面强制刷回磁盘（无论是否为脏页）
+  逻辑：
+    1. 在 page_table_ 中查找 page_id 对应的 frame_id
+    2. 如果找不到，返回 false
+    3. 获取对应的 Page 对象
+    4. 调用 disk_manager_->WritePage() 将页面数据写入磁盘
+    5. 清除页面的脏标志
+  返回值：成功返回 true，失败返回 false
+
+- Page* NewPage(page_id_t* page_id)
+  功能：分配一个新的页面（在磁盘和内存中）
+  逻辑：
+    1. 调用 disk_manager_->AllocPage() 分配新的 page_id
+    2. 查找空闲帧或通过 replacer_->Victim() 获取可淘汰帧
+    3. 如果淘汰帧的页面是脏页，先刷回磁盘
+    4. 从 page_table_ 中移除旧页面的映射（如果存在）
+    5. 初始化新的 Page 对象，设置新的 page_id
+    6. 更新 page_table_ 映射
+    7. 返回 Page*，pin_count 初始化为 1
+    8. 调用 replacer_->Pin() 防止被替换
+  返回值：成功返回 Page*，失败返回 nullptr
+
+- bool DeletePage(page_id_t page_id)
+  功能：删除指定页面（从缓冲池和磁盘）
+  逻辑：
+    1. 在 page_table_ 中查找 page_id 对应的 frame_id
+    2. 如果找不到，返回 true（页面可能已被删除）
+    3. 获取对应的 Page 对象
+    4. 如果 pin_count > 0，返回 false（页面正在被使用，不能删除）
+    5. 从 page_table_ 中移除映射
+    6. 重置 Page 对象（调用 Reset()）
+    7. 将 pages_[frame_id] 设为 nullptr（标记为空闲）
+    8. 调用 replacer_->Pin() 从替换器中移除
+  返回值：成功返回 true，失败返回 false
+
+- void FlushAllPages()
+  功能：将所有脏页刷回磁盘
+  逻辑：
+    1. 遍历 page_table_ 中的所有映射
+    2. 对于每个页面，如果 is_dirty 为 true，调用 FlushPage()
+  说明：通常在系统关闭或检查点时调用
+
+
+【2】B+ Tree Index（B+ 树索引）
+
+职责：
+- 提供高效的键值查找
+- 支持范围查询（范围扫描）
+- 维护索引的有序性
+- 处理节点的分裂与合并
+
+设计要点：
+- 内部节点存储键与子节点指针
+- 叶子节点存储键与记录 RID
+- 支持并发访问（读多写少场景）
+
+
+【3】Lock Manager（锁管理器）
+
+职责：
+- 管理事务对数据项的加锁请求
+- 实现共享锁（S）与排他锁（X）
+- 检测并处理死锁
+- 支持锁升级与降级
+
+核心机制：
+- 等待队列管理
+- 等待图（Wait-For Graph）死锁检测
+- 两阶段锁（2PL）协议
+
+
+【4】Executor（查询执行器）
+
+职责：
+- 实现火山模型（Volcano Model）
+- 提供统一的 Next() 接口
+- 支持执行器树（Executor Tree）
+- 处理不同操作（扫描、连接、聚合等）
+
+设计模式：
+- 迭代器模式
+- 管道化处理
+
+
+【5】Transaction Manager（事务管理器）
+
+职责：
+- 管理事务生命周期
+- 维护事务状态（运行、提交、中止）
+- 协调锁管理器与日志系统
+- 实现事务的 ACID 特性
+
+
+五、并发设计要点
+----------------------------------------
+
+1. 页面级并发控制
+- 每个页面有独立的读写锁
+- 支持多读单写（读者-写者锁）
+- 避免页面访问的数据竞争
+
+2. 缓冲池线程安全
+- 页面分配与释放的原子性
+- 替换策略的并发安全
+- 使用细粒度锁减少竞争
+
+3. 索引并发访问
+- B+ 树查找的并发读
+- 插入/删除的写锁保护
+- 考虑锁耦合（Lock Coupling）优化
+
+4. 死锁处理
+- 周期检测算法（DFS）
+- 事务回滚与资源释放
+- 避免活锁与饥饿
+
+
+六、接口设计示例（非强制）
+----------------------------------------
+
+class BufferPoolManager {
+private:
+    std::vector<Page*> pages_;                              // 页面数组
+    std::unordered_map<page_id_t, frame_id_t> page_table_;  // page_id 到 frame_id 的映射
+    Clock* replacer_;                                        // Clock 替换器
+    DiskManager* disk_manager_;                             // 磁盘管理器
+    size_t pool_size_;                                      // 缓冲池容量
+    std::mutex latch_;                                      // 缓冲池级锁
+
+public:
+    explicit BufferPoolManager(size_t pool_size, DiskManager* disk_manager);
+    ~BufferPoolManager();
+    
+    // 核心接口
+    Page* FetchPage(page_id_t page_id);                     // 获取页面（从磁盘加载）
+    bool UnpinPage(page_id_t page_id, bool is_dirty);       // 取消固定页面
+    bool FlushPage(page_id_t page_id);                       // 刷回脏页
+    Page* NewPage(page_id_t* page_id);                      // 分配新页面
+    bool DeletePage(page_id_t page_id);                     // 删除页面
+    void FlushAllPages();                                   // 刷回所有脏页
+};
+
+class BPlusTree {
+public:
+    bool GetValue(const KeyType& key, std::vector<RID>* result);
+    bool Insert(const KeyType& key, const RID& value);
+    bool Delete(const KeyType& key);
+    IndexIterator Begin();
+    IndexIterator End();
+};
+
+class LockManager {
+public:
+    bool LockShared(Transaction* txn, const RID& rid);
+    bool LockExclusive(Transaction* txn, const RID& rid);
+    bool Unlock(Transaction* txn, const RID& rid);
+};
+
+class Executor {
+public:
+    void Init();
+    bool Next(Tuple* tuple, RID* rid);
+};
+
+
+七、开发约束
+----------------------------------------
+
+- 使用现代 C++ 标准
+- 不使用第三方数据库库（如 SQLite、MySQL）
+- 不使用全局变量（配置除外）
+- 所有资源通过 RAII 管理
+- 通过所有单元测试与集成测试
+- 代码风格统一（Google C++ Style Guide 或类似）
+
+
+八、开发进度与计划
+----------------------------------------
+
+【已完成阶段】
+
+阶段 1：存储管理 ✓
+- 实现 DiskManager（磁盘 I/O）✓
+- 实现 Page 抽象 ✓
+- 实现 Clock Replacer（页面替换策略）✓
+- 实现 BufferPoolManager（缓冲池管理器）✓
+  * 实现 FetchPage（页面获取与加载）✓
+  * 实现 UnpinPage（取消固定）✓
+  * 实现 FlushPage（刷回脏页）✓
+  * 实现 NewPage（分配新页）✓
+  * 实现 DeletePage（删除页面）✓
+- 通过缓冲池测试 ✓
+
+阶段 2：索引结构 ✓
+- 实现 B+ 树节点结构 ✓
+- 实现查找、插入、删除操作 ✓
+- 处理节点分裂与合并 ✓
+- 实现迭代器接口 ✓
+- 通过 B+ 树测试 ✓
+
+阶段 3：查询执行 ✓
+- 实现执行器基类 ✓
+- 实现顺序扫描执行器 ✓
+- 实现索引扫描执行器 ✓
+- 实现插入/删除执行器 ✓
+- 支持执行器树组合 ✓
+
+【进行中阶段】
+
+阶段 4：并发控制 ○
+- 实现锁管理器基础功能 ✓
+- 实现事务管理器 ✓
+- 实现死锁检测算法（DeadLockDector）✓
+- 集成到执行器中（规划中）
+- 通过并发测试 ✓
+
+【规划阶段】
+
+阶段 5：优化与扩展
+- 实现日志与恢复系统（WAL）
+- 添加查询计划缓存（QueryPlanCache）
+- 实现更多执行器类型（Join、Aggregation、Sort）
+- 性能优化与基准测试
+- 网络服务层（暂缓）
+
+
+九、自测检查清单
+----------------------------------------
+
+存储管理 ✓：
+[x] 页面正确从磁盘加载到内存
+[x] Clock 替换策略正确工作
+[x] page_id 到 frame_id 映射正确维护
+[x] Pin/Unpin 机制正确工作（pin_count 管理）
+[x] 脏页正确刷回磁盘
+[x] 缓冲池线程安全（无数据竞争）
+[x] 无内存泄漏（所有 Page 对象正确释放）
+[x] 页面替换时正确处理脏页
+
+索引结构 ✓：
+[x] B+ 树查找正确
+[x] 插入后树结构保持平衡
+[x] 删除后树结构正确
+[x] 范围查询结果正确
+[x] 支持并发读
+
+查询执行 ✓：
+[x] 执行器 Next() 接口正确
+[x] 执行器树组合正确
+[x] 结果集完整准确
+[x] 内存使用合理
+
+并发控制 ○：
+[ ] 锁正确获取与释放（开发中）
+[x] 死锁能被检测与处理（DeadLockDector 已实现）
+[ ] 事务隔离级别正确（规划中）
+[ ] 无数据竞争（规划中）
+[ ] 无死锁与活锁（规划中）
+
+
+十、扩展方向（可选）
+----------------------------------------
+
+### ✅ 已完成框架搭建
+
+#### 查询执行增强
+- [x] 实现更多执行器（Join、Aggregation、Sort）✓（框架已创建）
+- [x] 实现查询优化器（基于规则的优化）✓（框架已创建）
+
+#### 系统功能扩展
+- [x] 实现 WAL（Write-Ahead Logging）✓（框架已创建）
+- [x] 实现检查点与恢复 ✓（框架已创建）
+- [x] 支持多表与模式管理 ✓（框架已创建）
+- [x] 实现 SQL 解析器 ✓（框架已创建）
+- [x] 性能基准测试（TPC-C 等）✓（框架已创建）
+
+### 🚧 待实现功能（详见开发计划.md）
+
+#### 第一阶段：存储引擎完善
+- [ ] 完善 Buffer Pool Manager 的页面管理逻辑
+- [ ] 优化 Disk Manager 的 I/O 性能
+- [ ] 实现完整的表堆存储功能
+
+#### 第二阶段：索引系统实现
+- [ ] 完善 B+树的核心功能实现
+- [ ] 实现节点分裂与合并算法
+- [ ] 优化索引的并发访问性能
+
+#### 第三阶段：查询执行引擎
+- [ ] 实现高级执行器的完整功能
+- [ ] 完善查询优化器
+- [ ] 实现执行器树优化
+
+#### 第四阶段：并发控制与集成
+- [ ] 完善事务管理器与锁管理器
+- [ ] 实现日志与恢复系统
+- [ ] 集成网络服务层
+
+
+十一、项目价值
+----------------------------------------
+
+完成本项目后，你将掌握：
+- 数据库系统核心组件的实现原理
+- 大规模系统设计思维
+- 并发编程与锁机制设计
+- 内存管理与 I/O 优化
+- 数据结构（B+ 树）的工程实现
+- 系统级调试与性能分析
+
+该项目是数据库系统内核开发的经典实践，
+难度与工业级数据库内核开发相近，是深入
+理解数据库原理的最佳途径。
+
+========================================
+
+十二、快速开始
+----------------------------------------
+
+### 环境要求
+- 现代 C++ 编译器（支持 C++17）
+- CMake 3.10+
+- Linux/macOS（推荐）或 Windows（MSVC）
+
+### 构建项目
+```bash
+# 创建构建目录
+mkdir build
+cd build
+
+# 生成构建文件
+cmake ..
+
+# 编译项目（Linux/macOS）
+make
+
+# 或 Windows：使用 Visual Studio 打开 build 目录中的 .sln 编译
+
+# 运行测试
+make test   # 或 ctest
+```
+
+### 项目结构说明
+- `include/` - 所有头文件，按模块组织
+- `src/` - 源文件实现，与头文件一一对应
+- `test/` - 单元测试文件
+- `CMakeLists.txt` - 构建配置
+
+### 开发建议
+1. 按照 `开发计划.md` 的时间表进行开发
+2. 每个功能实现后及时编写对应的测试
+3. 遵循现有的代码风格和命名规范
+4. 定期检查代码覆盖率和性能指标
+
+========================================
+
+附录 A：关于网络服务层
+----------------------------------------
+项目中包含 ServerManager.h 头文件，但目前暂不实现网络服务层。
+数据库内核与网络服务可解耦，后续可通过独立模块实现。
+
+附录 B：冷热分层改造历程
+----------------------------------------
+本项目由教学级 MiniDB 内核改造为工业级冷热分层关系型数据库 AtlasDB（2026.3）。
+改造目标：在电商、12306 等高流量场景下，提升缓存命中率、降低响应时间。
+五维优化（缓存、查询、索引、写入、运维）已实现，详见上文。
+
+========================================
+
+

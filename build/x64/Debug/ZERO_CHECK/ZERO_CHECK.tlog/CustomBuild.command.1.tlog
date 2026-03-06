@@ -1,0 +1,10 @@
+^D:\USERS\ANDYZHANG\DESKTOP\ATLASDB-MAIN\BUILD\CMAKEFILES\2CA5B8D2D8CCD764DC4231527BF69355\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/Users/andyzhang/Desktop/AtlasDB-main -BD:/Users/andyzhang/Desktop/AtlasDB-main/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/Users/andyzhang/Desktop/AtlasDB-main/build/MiniDB.slnx
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
