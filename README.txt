@@ -174,7 +174,7 @@ MiniDB/
 │   │   ├── Clock.cpp / ClockPro.cpp // Clock / ClockPro 算法（已完成）
 │   │   ├── LayeredClock.cpp         // 分层优先级替换实现（已完成）
 │   │   ├── Page.cpp                 // 页面管理实现（已完成）
-│   │   └── QueryPlanCache.cpp       // 查询计划缓存实现（已完成）
+│   │   └── QueryPlanCache.cpp       // 查询计划缓存实现（待开发）
 │   │
 │   ├── storage/                    // 存储实现
 │   │   ├── DiskManager.cpp          // 磁盘管理器实现（已完成）
