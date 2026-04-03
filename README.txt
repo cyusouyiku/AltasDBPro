@@ -215,7 +215,7 @@ MiniDB/
 │   │   └── SQLParser.cpp            // SQL 解析器实现（已完成）
 │   │
 │   ├── benchmark/                  // 基准测试与监控实现
-│   │   ├── BenchmarkRunner.cpp      // 基准测试运行器实现（已完成）
+│   │   ├── BenchmarkRunner.cpp      // 基准测试运行器实现（待开发）
 │   │   └── MetricsManager.cpp       // 冷热分层监控实现（已完成）
 │   │
 │   └── common/                     // 公共组件实现（1个文件）
