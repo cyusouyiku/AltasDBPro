@@ -112,125 +112,125 @@ MiniDB/
 │
 ├── include/                   // 头文件目录（33个文件）
 │   ├── buffer/                     // 缓冲池管理
-│   │   ├── BufferPoolManager.h      // 缓冲池管理器（LayeredClock 分层替换）
-│   │   ├── Clock.h / ClockPro.h     // Clock / ClockPro 替换策略
-│   │   ├── LayeredClock.h           // 分层优先级替换（冷页 5 倍优先淘汰）
-│   │   ├── Page.h                   // 页面抽象（含温度标记）
-│   │   ├── QueryPlan.h              // 查询计划基类
-│   │   └── QueryPlanCache.h         // 查询计划缓存（框架完成）
+│   │   ├── BufferPoolManager.h      // 缓冲池管理器（LayeredClock 分层替换）(已完成)
+│   │   ├── Clock.h / ClockPro.h     // Clock / ClockPro 替换策略（已完成）
+│   │   ├── LayeredClock.h           // 分层优先级替换（冷页 5 倍优先淘汰）（已完成）
+│   │   ├── Page.h                   // 页面抽象（含温度标记）（已完成）
+│   │   ├── QueryPlan.h              // 查询计划基类（已完成）
+│   │   └── QueryPlanCache.h         // 查询计划缓存（已完成）
 │   │
 │   ├── storage/                    // 存储管理
-│   │   ├── DiskManager.h            // 磁盘管理器（已实现基础功能）
-│   │   ├── table_heap.h             // 表堆存储（含 FlushBatch）
-│   │   ├── LayerManager.h           // 冷热分层管理器（迁移、限流、日志）
-│   │   └── CatalogManager.h         // 目录管理器（框架完成）
+│   │   ├── DiskManager.h            // 磁盘管理器（已完成）
+│   │   ├── table_heap.h             // 表堆存储（已完成）
+│   │   ├── LayerManager.h           // 冷热分层管理器（已完成）
+│   │   └── CatalogManager.h         // 目录管理器（已完成）
 │   │
 │   ├── index/                      // 索引系统
-│   │   ├── BPlusTree.h              // B+ 树索引（已实现基础功能）
-│   │   └── index_iterator.h         // 索引迭代器（已实现）
+│   │   ├── BPlusTree.h              // B+ 树索引（已完成）
+│   │   └── index_iterator.h         // 索引迭代器（已完成）
 │   │
 │   ├── executor/                   // 查询执行器（7个文件）
-│   │   ├── executor.h                // 执行器基类（已实现）
-│   │   ├── SeqScanExecutor.h        // 顺序扫描（支持分层路由）
-│   │   ├── IndexScanExecutor.h      // 索引扫描执行器（已实现基础功能）
-│   │   ├── InsertExecutor.h         // 插入执行器（批量攒批 1000 行/批）
-│   │   ├── MergeExecutor.h          // 热层+冷层结果合并
-│   │   ├── JoinExecutor.h           // 连接执行器（框架完成）
-│   │   ├── AggregationExecutor.h    // 聚合执行器（框架完成）
-│   │   └── SortExecutor.h           // 排序执行器（框架完成）
+│   │   ├── executor.h                // 执行器基类（已完成）
+│   │   ├── SeqScanExecutor.h        // 顺序扫描（已完成）
+│   │   ├── IndexScanExecutor.h      // 索引扫描执行器（已完成）
+│   │   ├── InsertExecutor.h         // 插入执行器（已完成后）
+│   │   ├── MergeExecutor.h          // 热层+冷层结果合并（已完成）
+│   │   ├── JoinExecutor.h           // 连接执行器（已完成）
+│   │   ├── AggregationExecutor.h    // 聚合执行器（已完成）
+│   │   └── SortExecutor.h           // 排序执行器（已完成）
 │   │
 │   ├── concurrency/                // 并发控制（5个文件）
-│   │   ├── DeadLockDector.h         // 死锁检测器（已实现）
-│   │   ├── LockManager.h            // 锁管理器（框架完成）
-│   │   ├── ServerManager.h          // 服务管理器（网络层框架）
-│   │   ├── Transaction.h            // 事务抽象（已实现）
-│   │   └── TransactionManager.h     // 事务管理器（已实现）
+│   │   ├── DeadLockDector.h         // 死锁检测器（已完成）
+│   │   ├── LockManager.h            // 锁管理器（已完成）
+│   │   ├── ServerManager.h          // 服务管理器（已完成）
+│   │   ├── Transaction.h            // 事务抽象（已完成）
+│   │   └── TransactionManager.h     // 事务管理器（已完成）
 │   │
 │   ├── log/                        // 日志系统（5个文件）
-│   │   ├── LockTable.h              // 锁表（框架完成）
-│   │   ├── LogBuffer.h              // 日志缓冲区（框架完成）
-│   │   ├── LogRecord.h              // 日志记录（已定义）
-│   │   ├── WALManager.h             // WAL 管理器（框架完成）
-│   │   └── CheckpointManager.h      // 检查点管理器（框架完成）
+│   │   ├── LockTable.h              // 锁表（已完成）
+│   │   ├── LogBuffer.h              // 日志缓冲区（已完成）
+│   │   ├── LogRecord.h              // 日志记录（已完成）
+│   │   ├── WALManager.h             // WAL 管理器（已完成）
+│   │   └── CheckpointManager.h      // 检查点管理器（已完成）
 │   │
 │   ├── optimizer/                  // 查询优化
-│   │   └── QueryOptimizer.h         // 查询优化器（时间条件解析、分层预判）
+│   │   └── QueryOptimizer.h         // 查询优化器（已完成）
 │   │
 │   ├── parser/                     // 解析器
-│   │   └── SQLParser.h              // SQL 解析器（框架完成）
+│   │   └── SQLParser.h              // SQL 解析器（已完成）
 │   │
 │   └── benchmark/                  // 性能测试与监控
-│       ├── BenchmarkRunner.h        // 基准测试运行器（框架完成）
-│       └── MetricsManager.h         // 冷热分层监控（Prometheus 兼容）
+│       ├── BenchmarkRunner.h        // 基准测试运行器（已完成）
+│       └── MetricsManager.h         // 冷热分层监控（已完成）
 │   │
 │   └── common/
-│       ├── config.h                 // 配置常量
-│       ├── rid.h                    // 记录标识符
-│       └── types.h                  // 类型定义
+│       ├── config.h                 // 配置常量（已完成）
+│       ├── rid.h                    // 记录标识符（已完成）
+│       └── types.h                  // 类型定义（已完成）
 │
 ├── src/                        // 源文件目录（28个文件）
 │   ├── buffer/                     // 缓冲池实现
 │   │   ├── BufferPoolManager.cpp    // 缓冲池管理器（LayeredClock）
-│   │   ├── Clock.cpp / ClockPro.cpp // Clock / ClockPro 算法
-│   │   ├── LayeredClock.cpp         // 分层优先级替换实现
-│   │   ├── Page.cpp                 // 页面管理实现
-│   │   └── QueryPlanCache.cpp       // 查询计划缓存实现
+│   │   ├── Clock.cpp / ClockPro.cpp // Clock / ClockPro 算法（已完成）
+│   │   ├── LayeredClock.cpp         // 分层优先级替换实现（已完成）
+│   │   ├── Page.cpp                 // 页面管理实现（已完成）
+│   │   └── QueryPlanCache.cpp       // 查询计划缓存实现（已完成）
 │   │
 │   ├── storage/                    // 存储实现
-│   │   ├── DiskManager.cpp          // 磁盘管理器实现
-│   │   ├── table_heap.cpp           // 表堆存储实现（含 FlushBatch）
-│   │   ├── LayerManager.cpp         // 冷热分层管理器实现
-│   │   └── CatalogManager.cpp       // 目录管理器实现
+│   │   ├── DiskManager.cpp          // 磁盘管理器实现（已完成）
+│   │   ├── table_heap.cpp           // 表堆存储实现（含 FlushBatch）（已完成）
+│   │   ├── LayerManager.cpp         // 冷热分层管理器实现（已完成）
+│   │   └── CatalogManager.cpp       // 目录管理器实现（已完成）
 │   │
 │   ├── index/                      // 索引实现（1个文件）
-│   │   └── BPlusTree.cpp            // B+ 树索引实现
+│   │   └── BPlusTree.cpp            // B+ 树索引实现（已完成）
 │   │
 │   ├── executor/                   // 执行器实现（7个文件）
-│   │   ├── executor.cpp              // 执行器基类实现
-│   │   ├── SeqScanExecutor.cpp      // 顺序扫描（分层路由）
-│   │   ├── IndexScanExecutor.cpp    // 索引扫描执行器实现
-│   │   ├── InsertExecutor.cpp       // 插入执行器（批量攒批）
-│   │   ├── MergeExecutor.cpp        // 热层+冷层合并实现
-│   │   ├── JoinExecutor.cpp         // 连接执行器实现
-│   │   ├── AggregationExecutor.cpp  // 聚合执行器实现
-│   │   └── SortExecutor.cpp         // 排序执行器实现
+│   │   ├── executor.cpp              // 执行器基类实现（已完成）
+│   │   ├── SeqScanExecutor.cpp      // 顺序扫描（分层路由）（已完成）
+│   │   ├── IndexScanExecutor.cpp    // 索引扫描执行器实现（已完成）
+│   │   ├── InsertExecutor.cpp       // 插入执行器（批量攒批）（已完成）
+│   │   ├── MergeExecutor.cpp        // 热层+冷层合并实现（已完成）
+│   │   ├── JoinExecutor.cpp         // 连接执行器实现（已完成）
+│   │   ├── AggregationExecutor.cpp  // 聚合执行器实现（已完成）
+│   │   └── SortExecutor.cpp         // 排序执行器实现（已完成）
 │   │
 │   ├── concurrency/                // 并发控制实现（5个文件）
-│   │   ├── DeadLockDector.cpp       // 死锁检测器实现
-│   │   ├── LockManager.cpp          // 锁管理器实现
-│   │   ├── ServerManager.cpp        // 服务管理器实现
-│   │   ├── Transaction.cpp          // 事务实现
-│   │   └── TransactionManager.cpp   // 事务管理器实现
+│   │   ├── DeadLockDector.cpp       // 死锁检测器实现（已完成）
+│   │   ├── LockManager.cpp          // 锁管理器实现（已完成）
+│   │   ├── ServerManager.cpp        // 服务管理器实现（已完成）
+│   │   ├── Transaction.cpp          // 事务实现（已完成）
+│   │   └── TransactionManager.cpp   // 事务管理器实现（已完成）
 │   │
 │   ├── log/                        // 日志系统实现（4个文件）
-│   │   ├── LockTable.cpp            // 锁表实现
-│   │   ├── LogBuffer.cpp            // 日志缓冲区实现
-│   │   ├── WALManager.cpp           // WAL 管理器实现
-│   │   └── CheckpointManager.cpp    // 检查点管理器实现
+│   │   ├── LockTable.cpp            // 锁表实现（已完成）
+│   │   ├── LogBuffer.cpp            // 日志缓冲区实现（已完成）
+│   │   ├── WALManager.cpp           // WAL 管理器实现（已完成）
+│   │   └── CheckpointManager.cpp    // 检查点管理器实现（已完成）
 │   │
 │   ├── optimizer/                  // 优化器实现（1个文件）
-│   │   └── QueryOptimizer.cpp       // 查询优化器实现
+│   │   └── QueryOptimizer.cpp       // 查询优化器实现（已完成）
 │   │
 │   ├── parser/                     // 解析器实现（1个文件）
-│   │   └── SQLParser.cpp            // SQL 解析器实现
+│   │   └── SQLParser.cpp            // SQL 解析器实现（已完成）
 │   │
 │   ├── benchmark/                  // 基准测试与监控实现
-│   │   ├── BenchmarkRunner.cpp      // 基准测试运行器实现
-│   │   └── MetricsManager.cpp       // 冷热分层监控实现
+│   │   ├── BenchmarkRunner.cpp      // 基准测试运行器实现（已完成）
+│   │   └── MetricsManager.cpp       // 冷热分层监控实现（已完成）
 │   │
 │   └── common/                     // 公共组件实现（1个文件）
 │       └── config.cpp               // 配置常量实现
 │
 ├── test/                        // 测试目录（5个测试文件）
-│   ├── buffer_pool_test.cpp         // 缓冲池测试（框架完成）
-│   ├── b_plus_tree_test.cpp         // B+ 树测试（框架完成）
-│   ├── executor_test.cpp            // 执行器测试（框架完成）
-│   ├── lock_manager_test.cpp        // 锁管理器测试（框架完成）
-│   └── sql_parser_test.cpp          // SQL 解析器测试（框架完成）
+│   ├── buffer_pool_test.cpp         // 缓冲池测试（已完成）
+│   ├── b_plus_tree_test.cpp         // B+ 树测试（已完成）
+│   ├── executor_test.cpp            // 执行器测试（已完成）
+│   ├── lock_manager_test.cpp        // 锁管理器测试（已完成）
+│   └── sql_parser_test.cpp          // SQL 解析器测试（已完成）
 │
 ├── build/                            // 构建输出目录
 │
-└── CMakeLists.txt                    // 构建脚本
+└── CMakeLists.txt                    // 构建脚本（已完成）
 
 
 四、核心模块职责说明
